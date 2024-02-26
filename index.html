@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
+  <meta http-equiv="refresh" content="3600" >
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -96,16 +97,15 @@
 <body>
 	<h1>5 Letters</h1>
 	<div class="content">
-		<div class="wordle">
+		<div class="wordle coloredletters">
 			<input type="text" maxlength="1">
 			<input type="text" maxlength="1">
 			<input type="text" maxlength="1">
 			<input type="text" maxlength="1">
 			<input type="text" maxlength="1">
-			<button id="goButton">Go</button>
 		</div>
 		<h3>Inclusions</h3>
-		<div class="inclusions">
+		<div class="inclusions coloredletters">
 			<input type="text">
 			<input type="text">
 			<input type="text">
@@ -200,79 +200,119 @@
 			return result;
 		}
 
-		document.querySelectorAll('input[type="text"]').forEach(input => {
+    function nextSquare () {
+      var focusedInput = document.activeElement;
+      var inputs = document.querySelectorAll('.coloredletters input[type="text"]');
+      var currentIndex = Array.prototype.indexOf.call(inputs, focusedInput);
+      if (currentIndex < inputs.length - 1) {
+          inputs[currentIndex + 1].focus();
+      }
+    }
+
+    function previousSquare() {
+      var focusedInput = document.activeElement;
+      var inputs = document.querySelectorAll('.coloredletters input[type="text"]');
+      var currentIndex = Array.prototype.indexOf.call(inputs, focusedInput);
+      if (currentIndex > 0) { // Check if the current input is not the first one
+          inputs[currentIndex - 1].focus(); // Focus on the previous input
+      }
+    }
+
+		window.onkeydown = function(e) {
+      console.log(e.which);
+      if (e.which == 13) {
+        e.preventDefault(); // Prevent default behavior of the Enter key (form submission)
+        nextSquare();
+      }
+    }
+
+    document.querySelectorAll('input[type="text"]').forEach(input => {
 			input.addEventListener('input', function () {
-				this.value = this.value.toUpperCase()
+				this.value = this.value.toUpperCase();
+        printScores();
 			});
 		});
 
 		document.querySelectorAll('.wordle input[type="text"]').forEach(input => {
-			input.addEventListener('input', function () {
+			input.addEventListener('keyup', function (e) {
 				this.style.backgroundColor = !!this.value ? 'green' : 'gray';
 				this.style.color = !!this.value ? 'lightgray' : 'black';
+        printScores();
+        const input = String.fromCharCode(event.keyCode);
+        if (/[a-zA-Z]/.test(input)) nextSquare();
+        if (e.which == 8) previousSquare();
 			});
 		});
 
 		document.querySelectorAll('.inclusions input[type="text"]').forEach(input => {
-			input.addEventListener('input', function () {
+			input.addEventListener('keyup', function () {
 				this.style.backgroundColor = !!this.value ? 'gold' : 'gray';
+        printScores();
+        const input = String.fromCharCode(event.keyCode);
+        if (/[a-zA-Z]/.test(input)) nextSquare();
 			});
 		});
 
-		document.getElementById('goButton').addEventListener('click', function () {
-			const lc = dots(Array.from(document.querySelectorAll('.wordle input[type="text"]')).map(input => input.value));
-			const lin = Array.from(document.querySelectorAll('.inclusions input[type="text"]')).map(input => input.value);
-			const arrIn = lc.concat(lin.join('').split(''));
-			const arrCon = dots(lin);
-			const arr1Of = document.querySelectorAll('.one input[type="text"]')[0].value.split('');
-			const arrOut = Object.keys(arrExc).filter(letter => arrExc[letter]);
-			let maybe = [];
-			let letters = {};
-			let scores = [];
-			
-			words.forEach(function (word) {
-				let valid = !new RegExp(`[${arrOut.join("|")}]`, "gi").test(word)
-				arrIn.forEach(function (me) {
-					if (valid) if (!new RegExp(`${me}`, "gi").test(word)) valid = false
-				});
-				arrCon.forEach(function (me) {
-					if (valid) if (new RegExp(`${me}`, "gi").test(word)) valid = false
-				});
-				arr1Of.forEach(function (me) {
-					if (valid) if ((word.match(new RegExp(`${me}`, "gi")) || []).length > 1) valid = false
-				})
-				if (valid) maybe.push(word);
-			});
-
-			for (word of maybe) {
-				for (var i = 0; i < word.length; i++) {
-					let l = word.charAt(i);
-					let adder = 1/(word.match(new RegExp(`${l}`, "gi")) || []).length;
-					letters[l] = !!letters[l] ? letters[l] + adder : adder;
-				}
-			}
-
-			for (word of maybe) {
-				let thisScore = 0;
-				for (var i = 0; i < word.length; i++) {
-					let l = word.charAt(i);
-					let v = letters[l];
-					let multi = 1/(word.match(new RegExp(`${l}`, "gi")) || []).length;
-					thisScore += (multi * v);
-				}
-				scores.push({word:word,score:thisScore});
-			}
-
-			scores.sort(function (a, b) {return b.score - a.score});
-
-			const wordListElement = document.getElementById('wordList');
-			wordListElement.innerHTML = '';
-			scores.forEach(item => {
-				const listItem = document.createElement('li');
-				listItem.textContent = `${item.word} - ${item.score}`;
-				wordListElement.appendChild(listItem);
-			});
+		document.querySelectorAll('.keyboard').forEach(input => {
+      input.addEventListener('click', function () {
+        printScores();
+      });
 		});
+
+    function printScores () {
+      const lc = dots(Array.from(document.querySelectorAll('.wordle input[type="text"]')).map(input => input.value));
+      const lin = Array.from(document.querySelectorAll('.inclusions input[type="text"]')).map(input => input.value);
+      const arrIn = lc.concat(lin.join('').split(''));
+      const arrCon = dots(lin);
+      const arr1Of = document.querySelectorAll('.one input[type="text"]')[0].value.split('');
+      const arrOut = Object.keys(arrExc).filter(letter => arrExc[letter]);
+      let maybe = [];
+      let letters = {};
+      let scores = [];
+      
+      words.forEach(function (word) {
+        let valid = !new RegExp(`[${arrOut.join("|")}]`, "gi").test(word)
+        arrIn.forEach(function (me) {
+          if (valid) if (!new RegExp(`${me}`, "gi").test(word)) valid = false
+        });
+        arrCon.forEach(function (me) {
+          if (valid) if (new RegExp(`${me}`, "gi").test(word)) valid = false
+        });
+        arr1Of.forEach(function (me) {
+          if (valid) if ((word.match(new RegExp(`${me}`, "gi")) || []).length > 1) valid = false
+        })
+        if (valid) maybe.push(word);
+      });
+
+      for (word of maybe) {
+        for (var i = 0; i < word.length; i++) {
+          let l = word.charAt(i);
+          let adder = 1/(word.match(new RegExp(`${l}`, "gi")) || []).length;
+          letters[l] = !!letters[l] ? letters[l] + adder : adder;
+        }
+      }
+
+      for (word of maybe) {
+        let thisScore = 0;
+        for (var i = 0; i < word.length; i++) {
+          let l = word.charAt(i);
+          let v = letters[l];
+          let multi = 1/(word.match(new RegExp(`${l}`, "gi")) || []).length;
+          thisScore += (multi * v);
+        }
+        scores.push({word:word,score:thisScore});
+      }
+
+      scores.sort(function (a, b) {return b.score - a.score});
+
+      const wordListElement = document.getElementById('wordList');
+      wordListElement.innerHTML = '';
+      scores.forEach(item => {
+        const listItem = document.createElement('li');
+        listItem.textContent = `${item.word} - ${item.score}`;
+        wordListElement.appendChild(listItem);
+      });
+    }
 
 		updateLetterList();
 	</script>
