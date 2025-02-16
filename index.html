@@ -284,6 +284,39 @@
         if (valid) maybe.push(word);
       });
 
+      let letterFrequencies = Array(maybe[0].length).fill(null).map(() => ({}));
+
+      // Count occurrences of letters at each position
+      for (let word of maybe) {
+        for (let i = 0; i < word.length; i++) {
+          let letter = word[i];
+          if (!letterFrequencies[i][letter]) {
+            letterFrequencies[i][letter] = 0;
+          }
+          letterFrequencies[i][letter]++;
+        }
+      }
+
+      // Determine the most frequent valid letters at each position
+      let topLetters = letterFrequencies.map(freqMap => {
+        let letterCounts = Object.entries(freqMap).filter(([_, count]) => count > 1); // Remove single occurrences
+
+        if (letterCounts.length === 0) {
+          return ["-"]; // If no valid letters exist, return "-"
+        }
+
+        let maxFrequency = Math.max(...letterCounts.map(([_, count]) => count)); // Find the highest frequency
+
+        return letterCounts
+          .filter(([_, count]) => count === maxFrequency) // Keep only max-frequency letters
+          .map(([letter]) => letter);
+      });
+
+      console.log(topLetters);
+
+
+
+
       for (word of maybe) {
         for (var i = 0; i < word.length; i++) {
           let l = word.charAt(i);
@@ -309,7 +342,7 @@
       wordListElement.innerHTML = '';
       scores.forEach(item => {
         const listItem = document.createElement('li');
-        listItem.textContent = `${item.word} - ${item.score}`;
+        listItem.textContent = `${item.word} - ${Math.round(item.score)}`;
         wordListElement.appendChild(listItem);
       });
     }
