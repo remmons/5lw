@@ -181,7 +181,7 @@ function printScores() {
     
     // Add 10 points for words in plusTenWords array
       if (plusTenWords.includes(word)) {
-        thisScore += 10;
+        thisScore += 50;
     }
 
     scores.push({
